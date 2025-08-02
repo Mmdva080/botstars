@@ -1,8 +1,8 @@
 import telebot
 from telebot import types
 
-API_TOKEN = 'YOUR_BOT_TOKEN'
-ADMIN_IDS = [123456789]
+API_TOKEN = '8330580574:AAE5fGninmjIS2Sv312owviNQ03PSvNhonQ'
+ADMIN_IDS = [8155895113]
 
 bot = telebot.TeleBot(API_TOKEN)
 
