@@ -1,14 +1,26 @@
+from flask import Flask
+import threading
 import telebot
-from telebot import types
 
 API_TOKEN = '8330580574:AAE5fGninmjIS2Sv312owviNQ03PSvNhonQ'
 ADMIN_IDS = [8155895113]
 
 bot = telebot.TeleBot(API_TOKEN)
+app = Flask(__name__)
 
+# --- بخش ربات (مثل قبل) ---
 CHANNEL_USERNAME = None
 users = {}
 referrals = {}
+
+def bot_polling():
+    bot.polling()
+
+@app.route('/')
+def index():
+    return "Bot is running!"
+
+# قرار دادن هندلرها و فانکشن‌های ربات اینجا (مثل کد قبلی)
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -18,15 +30,15 @@ def send_welcome(message):
         users[str(user_id)] = {'score': 0}
     if CHANNEL_USERNAME:
         if not is_user_in_channel(user_id):
-            markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME}")
+            markup = telebot.types.InlineKeyboardMarkup()
+            btn = telebot.types.InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME}")
             markup.add(btn)
             bot.reply_to(message, "برای استفاده از ربات ابتدا در کانال عضو شو", reply_markup=markup)
             return
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("🎲 تاس بنداز")
-    btn2 = types.KeyboardButton("👥 زیرمجموعه‌گیری")
-    btn3 = types.KeyboardButton("🎁 جایزه بگیر")
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = telebot.types.KeyboardButton("🎲 تاس بنداز")
+    btn2 = telebot.types.KeyboardButton("👥 زیرمجموعه‌گیری")
+    btn3 = telebot.types.KeyboardButton("🎁 جایزه بگیر")
     markup.add(btn1, btn2, btn3)
     bot.reply_to(message, "به ربات خوش آمدید!", reply_markup=markup)
     check_referral(message)
@@ -59,9 +71,7 @@ def roll_dice(message):
 @bot.message_handler(func=lambda message: message.text == "👥 زیرمجموعه‌گیری")
 def referral_link(message):
     user_id = message.from_user.id
-    bot.send_message(message.chat.id, f"لینک دعوت شما:
-https://t.me/{bot.get_me().username}?start={user_id}
-تعداد زیرمجموعه‌ها: {users[str(user_id)]['score']}")
+    bot.send_message(message.chat.id, f"لینک دعوت شما:\nhttps://t.me/{bot.get_me().username}?start={user_id}\nتعداد زیرمجموعه‌ها: {users[str(user_id)]['score']}")
 
 @bot.message_handler(func=lambda message: message.text == "🎁 جایزه بگیر")
 def gift_game(message):
@@ -100,4 +110,8 @@ def private_message(message):
         bot.send_message(uid, msg)
         bot.reply_to(message, "پیام ارسال شد.")
 
-bot.polling()
+if __name__ == '__main__':
+    # اجرای ربات در یک ترد جدا
+    threading.Thread(target=bot_polling).start()
+    # اجرای وب‌سرور Flask
+    app.run(host='0.0.0.0', port=10000)
